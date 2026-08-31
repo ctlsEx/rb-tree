@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Animacao - Arvore Rubro-Negra</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: #10151f;
+        color: #eef2ff;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background:
+          radial-gradient(circle at top left, rgba(37, 99, 235, 0.32), transparent 34rem),
+          linear-gradient(145deg, #10151f, #151923 45%, #0b1120);
+      }
+
+      main {
+        width: min(980px, calc(100vw - 32px));
+      }
+
+      h1 {
+        margin: 0 0 8px;
+        font-size: clamp(2rem, 5vw, 4.5rem);
+        letter-spacing: 0;
+      }
+
+      p {
+        margin: 0 0 24px;
+        color: #cbd5e1;
+        font-size: 1rem;
+        max-width: 700px;
+      }
+
+      .stage {
+        position: relative;
+        height: 440px;
+        overflow: hidden;
+        border: 1px solid #334155;
+        border-radius: 8px;
+        background: rgba(15, 23, 42, 0.76);
+      }
+
+      .node {
+        position: absolute;
+        width: 58px;
+        height: 58px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        font-weight: 800;
+        color: white;
+        border: 2px solid rgba(255, 255, 255, 0.76);
+        transform: translate(-50%, -50%) scale(0);
+        animation: pop 700ms cubic-bezier(.2, 1.5, .35, 1) forwards;
+        box-shadow: 0 18px 40px rgba(0, 0, 0, .36);
+      }
+
+      .red { background: #dc2626; }
+      .black { background: #020617; }
+
+      .edge {
+        position: absolute;
+        height: 2px;
+        background: #64748b;
+        transform-origin: left center;
+        animation: draw 800ms ease-out forwards;
+        opacity: 0;
+      }
+
+      .caption {
+        min-height: 28px;
+        margin-top: 16px;
+        color: #e2e8f0;
+        font-size: 1rem;
+      }
+
+      .controls {
+        display: flex;
+        gap: 10px;
+        margin-top: 16px;
+      }
+
+      button {
+        border: 0;
+        border-radius: 8px;
+        padding: 11px 16px;
+        color: #0f172a;
+        background: #f8fafc;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      button.secondary {
+        color: #e2e8f0;
+        background: #334155;
+      }
+
+      @keyframes pop {
+        0% { transform: translate(-50%, -50%) scale(.25); opacity: 0; }
+        70% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
+        100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+      }
+
+      @keyframes draw {
+        from { opacity: 0; clip-path: inset(0 100% 0 0); }
+        to { opacity: 1; clip-path: inset(0 0 0 0); }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Arvore Rubro-Negra</h1>
+      <p>Uma animacao curta mostrando insercao, conflito vermelho-vermelho, recoloracao e rotacao.</p>
+      <section class="stage" id="stage" aria-label="Visualizacao animada da arvore"></section>
+      <div class="caption" id="caption"></div>
+      <div class="controls">
+        <button id="play">Reproduzir</button>
+        <button class="secondary" id="reset">Reiniciar</button>
+      </div>
+    </main>
+
+    <script>
+      const stage = document.querySelector("#stage");
+      const caption = document.querySelector("#caption");
+
+      const frames = [
+        {
+          text: "1. A raiz entra preta.",
+          nodes: [{ id: "38", value: 38, color: "black", x: 50, y: 17 }],
+          edges: []
+        },
+        {
+          text: "2. Novos valores entram vermelhos como em uma BST comum.",
+          nodes: [
+            { id: "38", value: 38, color: "black", x: 50, y: 17 },
+            { id: "31", value: 31, color: "red", x: 32, y: 39 },
+            { id: "41", value: 41, color: "red", x: 68, y: 39 }
+          ],
+          edges: [["38", "31"], ["38", "41"]]
+        },
+        {
+          text: "3. Se pai e tio sao vermelhos, o algoritmo recolore.",
+          nodes: [
+            { id: "38", value: 38, color: "black", x: 50, y: 17 },
+            { id: "31", value: 31, color: "black", x: 32, y: 39 },
+            { id: "41", value: 41, color: "black", x: 68, y: 39 },
+            { id: "12", value: 12, color: "red", x: 22, y: 62 }
+          ],
+          edges: [["38", "31"], ["38", "41"], ["31", "12"]]
+        },
+        {
+          text: "4. Em conflito em linha, uma rotacao devolve equilibrio.",
+          nodes: [
+            { id: "31", value: 31, color: "black", x: 50, y: 17 },
+            { id: "12", value: 12, color: "black", x: 32, y: 39 },
+            { id: "38", value: 38, color: "red", x: 68, y: 39 },
+            { id: "8", value: 8, color: "red", x: 22, y: 62 },
+            { id: "19", value: 19, color: "red", x: 42, y: 62 },
+            { id: "41", value: 41, color: "black", x: 78, y: 62 }
+          ],
+          edges: [["31", "12"], ["31", "38"], ["12", "8"], ["12", "19"], ["38", "41"]]
+        }
+      ];
+
+      const byId = (nodes, id) => nodes.find((node) => node.id === id);
+
+      function render(frameIndex) {
+        const frame = frames[frameIndex];
+        stage.innerHTML = "";
+        caption.textContent = frame.text;
+
+        frame.edges.forEach(([fromId, toId], index) => {
+          const from = byId(frame.nodes, fromId);
+          const to = byId(frame.nodes, toId);
+          const dx = to.x - from.x;
+          const dy = to.y - from.y;
+          const length = Math.hypot(dx, dy);
+          const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+          const edge = document.createElement("div");
+          edge.className = "edge";
+          edge.style.left = `${from.x}%`;
+          edge.style.top = `${from.y}%`;
+          edge.style.width = `${length}%`;
+          edge.style.transform = `rotate(${angle}deg)`;
+          edge.style.animationDelay = `${index * 90}ms`;
+          stage.append(edge);
+        });
+
+        frame.nodes.forEach((node, index) => {
+          const element = document.createElement("div");
+          element.className = `node ${node.color}`;
+          element.textContent = node.value;
+          element.style.left = `${node.x}%`;
+          element.style.top = `${node.y}%`;
+          element.style.animationDelay = `${180 + index * 95}ms`;
+          stage.append(element);
+        });
+      }
+
+      async function play() {
+        for (let i = 0; i < frames.length; i += 1) {
+          render(i);
+          await new Promise((resolve) => setTimeout(resolve, 1850));
+        }
+      }
+
+      document.querySelector("#play").addEventListener("click", play);
+      document.querySelector("#reset").addEventListener("click", () => render(0));
+      render(0);
+    </script>
+  </body>
+</html>
+
