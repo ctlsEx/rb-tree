@@ -9,3 +9,8 @@ __pycache__/
 .ruff_cache/
 .coverage
 htmlcov/
+*.so
+*.dylib
+*.obj
+*.lib
+*.exp

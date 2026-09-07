@@ -8,7 +8,7 @@ import re
 import flet as ft
 import flet.canvas as cv
 
-from src.algorithm import NodeColor, RedBlackTree, TreeNode
+from src.native_tree import NodeColor, RedBlackTree, TreeNode
 
 
 class RedBlackTreeApp:
